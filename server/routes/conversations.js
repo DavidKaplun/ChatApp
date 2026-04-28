@@ -32,6 +32,33 @@ router.get('/', requireAuth, async (req, res) => {
   }
 })
 
+router.post('/', requireAuth, async (req, res) => {
+  try {
+    const { other_user_id } = req.body
+    if (!other_user_id) return res.status(400).json({ error: 'other_user_id required' })
+    if (Number(other_user_id) === req.user.id) return res.status(400).json({ error: 'Cannot chat with yourself' })
+
+    const u1 = Math.min(req.user.id, other_user_id)
+    const u2 = Math.max(req.user.id, other_user_id)
+
+    const { rows } = await pool.query(`
+      INSERT INTO conversations (user1_id, user2_id) VALUES ($1, $2)
+      ON CONFLICT ON CONSTRAINT unique_pair DO UPDATE SET user1_id = EXCLUDED.user1_id
+      RETURNING id
+    `, [u1, u2])
+
+    const { rows: userRows } = await pool.query(
+      'SELECT id, username, display_name FROM users WHERE id = $1',
+      [other_user_id]
+    )
+    const other = userRows[0]
+
+    res.json({ id: rows[0].id, other_user_id: other.id, username: other.username, display_name: other.display_name, last_message: null, last_message_at: null })
+  } catch {
+    res.status(500).json({ error: 'Server error' })
+  }
+})
+
 router.get('/:id/messages', requireAuth, async (req, res) => {
   try {
     const { rows: conv } = await pool.query(
@@ -45,6 +72,27 @@ router.get('/:id/messages', requireAuth, async (req, res) => {
       [req.params.id]
     )
     res.json(rows)
+  } catch {
+    res.status(500).json({ error: 'Server error' })
+  }
+})
+
+router.post('/:id/messages', requireAuth, async (req, res) => {
+  try {
+    const { content } = req.body
+    if (!content?.trim()) return res.status(400).json({ error: 'Content required' })
+
+    const { rows: conv } = await pool.query(
+      'SELECT id FROM conversations WHERE id = $1 AND (user1_id = $2 OR user2_id = $2)',
+      [req.params.id, req.user.id]
+    )
+    if (!conv.length) return res.status(403).json({ error: 'Forbidden' })
+
+    const { rows } = await pool.query(
+      'INSERT INTO messages (conversation_id, sender_id, content) VALUES ($1, $2, $3) RETURNING id, sender_id, content, sent_at',
+      [req.params.id, req.user.id, content.trim()]
+    )
+    res.status(201).json(rows[0])
   } catch {
     res.status(500).json({ error: 'Server error' })
   }

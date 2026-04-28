@@ -65,6 +65,36 @@ export default function ChatPage({ user }) {
     } catch {}
   }
 
+  async function startConversation(otherUserId) {
+    try {
+      const res = await authFetch('/api/conversations', {
+        method: 'POST',
+        body: JSON.stringify({ other_user_id: otherUserId }),
+      })
+      if (!res.ok) return
+      const conv = await res.json()
+      await openConversation(conv)
+      fetchConversations()
+    } catch {}
+  }
+
+  async function sendMessage() {
+    if (!message.trim() || !activeConv) return
+    try {
+      const res = await authFetch(`/api/conversations/${activeConv.id}/messages`, {
+        method: 'POST',
+        body: JSON.stringify({ content: message.trim() }),
+      })
+      if (!res.ok) return
+      const msg = await res.json()
+      setMessages(prev => [...prev, msg])
+      setMessage('')
+      setConversations(prev => prev.map(c =>
+        c.id === activeConv.id ? { ...c, last_message: msg.content, last_message_at: msg.sent_at } : c
+      ))
+    } catch {}
+  }
+
   async function doSearch(q) {
     try {
       const res = await authFetch(`/api/users/search?q=${encodeURIComponent(q)}`)
@@ -139,7 +169,7 @@ export default function ChatPage({ user }) {
                     <div
                       key={u.id}
                       className={styles.convItem}
-                      onClick={() => setView('search-empty')}
+                      onClick={() => startConversation(u.id)}
                     >
                       <div className={styles.avatar} style={{ backgroundColor: colorFromId(u.id) }}>
                         {initialsFromName(u.display_name)}
@@ -265,8 +295,9 @@ export default function ChatPage({ user }) {
                 placeholder="Message"
                 value={message}
                 onChange={e => setMessage(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && sendMessage()}
               />
-              <button className={styles.sendBtn}><SendIcon /></button>
+              <button className={styles.sendBtn} onClick={sendMessage}><SendIcon /></button>
             </div>
           </div>
         )}
