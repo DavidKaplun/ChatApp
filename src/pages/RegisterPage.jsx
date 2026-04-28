@@ -2,13 +2,33 @@ import { useState } from 'react'
 import styles from './LoginPage.module.css'
 
 export default function RegisterPage({ onNavigateToLogin, onNavigateToChat }) {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const [username, setUsername]               = useState('')
+  const [password, setPassword]               = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError]                     = useState('')
+  const [loading, setLoading]                 = useState(false)
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    onNavigateToChat()
+    setError('')
+    if (password !== confirmPassword) { setError('Passwords do not match'); return }
+    setLoading(true)
+    try {
+      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ username, password }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error); return }
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user',  JSON.stringify(data.user))
+      onNavigateToChat(data.user)
+    } catch {
+      setError('Could not connect to server')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -46,8 +66,9 @@ export default function RegisterPage({ onNavigateToLogin, onNavigateToChat }) {
             onChange={(e) => setConfirmPassword(e.target.value)}
             autoComplete="new-password"
           />
-          <button className={styles.button} type="submit">
-            Create account
+          {error && <p className={styles.error}>{error}</p>}
+          <button className={styles.button} type="submit" disabled={loading}>
+            {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 

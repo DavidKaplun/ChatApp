@@ -74,6 +74,13 @@
   box-shadow: 0 0 0 3px rgba(91, 82, 231, 0.12);
 }
 
+.error {
+  color: #e05252;
+  font-size: 13px;
+  text-align: center;
+  margin: -4px 0;
+}
+
 .button {
   width: 100%;
   padding: 16px;

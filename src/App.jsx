@@ -5,9 +5,15 @@ import ChatPage from './pages/ChatPage'
 
 export default function App() {
   const [page, setPage] = useState('login')
+  const [user, setUser] = useState(null)
 
-  if (page === 'register') return <RegisterPage onNavigateToLogin={() => setPage('login')} onNavigateToChat={() => setPage('chat')} />
-  if (page === 'chat')     return <ChatPage />
+  function goToChat(user) {
+    setUser(user)
+    setPage('chat')
+  }
 
-  return <LoginPage onNavigateToRegister={() => setPage('register')} onNavigateToChat={() => setPage('chat')} />
+  if (page === 'register') return <RegisterPage onNavigateToLogin={() => setPage('login')} onNavigateToChat={goToChat} />
+  if (page === 'chat')     return <ChatPage user={user} />
+
+  return <LoginPage onNavigateToRegister={() => setPage('register')} onNavigateToChat={goToChat} />
 }

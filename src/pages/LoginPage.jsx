@@ -4,10 +4,29 @@ import styles from './LoginPage.module.css'
 export default function LoginPage({ onNavigateToRegister, onNavigateToChat }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError]       = useState('')
+  const [loading, setLoading]   = useState(false)
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    onNavigateToChat()
+    setError('')
+    setLoading(true)
+    try {
+      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ username, password }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error); return }
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user',  JSON.stringify(data.user))
+      onNavigateToChat(data.user)
+    } catch {
+      setError('Could not connect to server')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -37,8 +56,9 @@ export default function LoginPage({ onNavigateToRegister, onNavigateToChat }) {
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
           />
-          <button className={styles.button} type="submit">
-            Sign in
+          {error && <p className={styles.error}>{error}</p>}
+          <button className={styles.button} type="submit" disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
 
