@@ -1,0 +1,228 @@
+.panel {
+  flex: 1;
+  background: #1e1e1e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* ── VIDEO CALL specific ── */
+.videoTopLeft {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.videoName {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+}
+.videoTimer {
+  color: #aaaaaa;
+  font-size: 13px;
+}
+.hdBadge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #3a3a3a;
+  color: #cccccc;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+.selfView {
+  position: absolute;
+  top: 52px;
+  right: 20px;
+  width: 110px;
+  height: 84px;
+  background: #2e2e2e;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.selfAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.videoAvatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2d2860;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+/* ── Shared avatar (centered views) ── */
+.centerAvatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2d2860;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+/* ── Incoming call rings ── */
+.ringOuter {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ringInner {
+  width: 142px;
+  height: 142px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Text ── */
+.callLabel {
+  position: absolute;
+  top: 24px;
+  color: #888888;
+  font-size: 13px;
+}
+.callerName {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+.callerSub {
+  color: #888888;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.callingText {
+  color: #e0952a;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.timerText {
+  color: #4ade80;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+/* ── Controls ── */
+.controls {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-top: 20px;
+}
+.ctrlBtn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #3a3a3a;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ctrlBtn:hover {
+  background: #4a4a4a;
+}
+.ctrlBtnOn {
+  background: #555555;
+}
+.endBtn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #e05252;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.endBtn:hover {
+  background: #cc3f3f;
+}
+.acceptBtn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #4caf50;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.acceptBtn:hover {
+  background: #3d9140;
+}
+.declineBtn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #e05252;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.declineBtn:hover {
+  background: #cc3f3f;
+}
+
+/* ── Incoming call button row ── */
+.incomingBtns {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  margin-top: 12px;
+}
+.btnGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.btnLabel {
+  color: #cccccc;
+  font-size: 13px;
+}

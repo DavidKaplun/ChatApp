@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import styles from './ChatPage.module.css'
+import CallPanel from './CallPanel'
 
 const CONVERSATIONS = [
-  { id: 1, initials: 'MR', name: 'Maya Rodriguez', lastMsg: 'sounds good, talk later',        time: '2:14', color: '#7B6CF6' },
+  { id: 1, initials: 'MR', name: 'Maya Rodriguez', lastMsg: 'sounds good, talk later',        time: '2:14', color: '#a89fd8' },
   { id: 2, initials: 'JT', name: 'Jordan Tate',    lastMsg: 'did you see the new build?',     time: '1:02', color: '#43B589' },
   { id: 3, initials: 'SK', name: 'Sam Klein',       lastMsg: 'thanks for the help yesterd...', time: 'Mon',  color: '#E06B5A' },
   { id: 4, initials: 'AL', name: 'Alex Lin',        lastMsg: "let me know when you're free",  time: 'Sun',  color: '#D95F8A' },
@@ -17,17 +18,19 @@ const MESSAGES = [
   { id: 5, text: 'sounds good, talk later',                        sent: false },
 ]
 
+const CALL_VIEWS = ['outgoing-call', 'incoming-call', 'audio-call', 'video-call']
+
 export default function ChatPage() {
-  const [activeId, setActiveId]   = useState(1)
-  const [message, setMessage]     = useState('')
-  const [view, setView]           = useState('chat') // 'chat' | 'settings'
+  const [activeId, setActiveId]       = useState(1)
+  const [message, setMessage]         = useState('')
+  const [view, setView]               = useState('chat')
   const [displayName, setDisplayName] = useState('David')
   const active = CONVERSATIONS.find(c => c.id === activeId)
 
-  function openChat(id) {
-    setActiveId(id)
-    setView('chat')
-  }
+  function openChat(id) { setActiveId(id); setView('chat') }
+  function endCall()    { setView('chat') }
+
+  const isCallView = CALL_VIEWS.includes(view)
 
   return (
     <div className={styles.wrapper}>
@@ -71,67 +74,59 @@ export default function ChatPage() {
           </div>
         </aside>
 
-        {/* ── Main area ── */}
-        {view === 'settings' ? (
+        {/* ── Call panels ── */}
+        {isCallView && (
+          <CallPanel
+            view={view}
+            contact={active}
+            onEnd={endCall}
+            onAccept={() => setView('audio-call')}
+          />
+        )}
+
+        {/* ── Settings ── */}
+        {view === 'settings' && (
           <div className={styles.chatArea}>
             <header className={styles.chatHeader}>
               <span className={styles.chatHeaderName}>Settings</span>
             </header>
-
             <div className={styles.settingsBody}>
               <div className={styles.settingsAvatar} style={{ backgroundColor: '#5b52e7' }}>DV</div>
               <span className={styles.settingsUsername}>@davidv</span>
-
               <div className={styles.settingsField}>
                 <label className={styles.settingsLabel}>Display name</label>
-                <input
-                  className={styles.settingsInput}
-                  type="text"
-                  value={displayName}
-                  onChange={e => setDisplayName(e.target.value)}
-                />
+                <input className={styles.settingsInput} type="text" value={displayName} onChange={e => setDisplayName(e.target.value)} />
                 <span className={styles.settingsHint}>This is how others will see you in chats.</span>
               </div>
-
               <button className={styles.saveBtn}>Save changes</button>
-
               <div className={styles.settingsDivider} />
-
               <button className={styles.signOutBtn}>Sign out</button>
             </div>
           </div>
-        ) : (
+        )}
+
+        {/* ── Chat ── */}
+        {view === 'chat' && (
           <div className={styles.chatArea}>
             <header className={styles.chatHeader}>
               <div className={styles.avatar} style={{ backgroundColor: active.color }}>{active.initials}</div>
               <span className={styles.chatHeaderName}>{active.name}</span>
               <div className={styles.chatHeaderIcons}>
-                <button className={styles.iconBtn} aria-label="Voice call"><PhoneIcon /></button>
-                <button className={styles.iconBtn} aria-label="Video call"><VideoIcon /></button>
+                <button className={styles.iconBtn} onClick={() => setView('outgoing-call')}><PhoneIcon /></button>
+                <button className={styles.iconBtn} onClick={() => setView('video-call')}><VideoIcon /></button>
               </div>
             </header>
-
             <div className={styles.messages}>
               <span className={styles.dateSep}>Today 1:58 PM</span>
               {MESSAGES.map(msg => (
-                <div
-                  key={msg.id}
-                  className={`${styles.bubble} ${msg.sent ? styles.bubbleSent : styles.bubbleReceived}`}
-                >
+                <div key={msg.id} className={`${styles.bubble} ${msg.sent ? styles.bubbleSent : styles.bubbleReceived}`}>
                   {msg.text}
                 </div>
               ))}
             </div>
-
             <div className={styles.inputArea}>
-              <input
-                className={styles.msgInput}
-                type="text"
-                placeholder="Message"
-                value={message}
-                onChange={e => setMessage(e.target.value)}
-              />
-              <button className={styles.sendBtn} aria-label="Send"><SendIcon /></button>
+              <input className={styles.msgInput} type="text" placeholder="Message" value={message} onChange={e => setMessage(e.target.value)} />
+              <button className={styles.sendBtn}><SendIcon /></button>
             </div>
           </div>
         )}
@@ -149,7 +144,6 @@ function GearIcon() {
     </svg>
   )
 }
-
 function PhoneIcon() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -157,7 +151,6 @@ function PhoneIcon() {
     </svg>
   )
 }
-
 function VideoIcon() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -166,7 +159,6 @@ function VideoIcon() {
     </svg>
   )
 }
-
 function SendIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
