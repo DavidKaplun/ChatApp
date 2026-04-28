@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import styles from './LoginPage.module.css'
 
-export default function LoginPage({ onNavigateToRegister }) {
+export default function LoginPage({ onNavigateToRegister, onNavigateToChat }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
   function handleSubmit(e) {
     e.preventDefault()
-    // backend wired up later
+    onNavigateToChat()
   }
 
   return (
