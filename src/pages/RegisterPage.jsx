@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import styles from './LoginPage.module.css'
 
-export default function LoginPage({ onNavigateToRegister }) {
+export default function RegisterPage({ onNavigateToLogin }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -17,8 +18,8 @@ export default function LoginPage({ onNavigateToRegister }) {
           <ChatIcon />
         </div>
 
-        <h1 className={styles.heading}>Welcome back</h1>
-        <p className={styles.subheading}>Sign in to continue</p>
+        <h1 className={styles.heading}>Create your account</h1>
+        <p className={styles.subheading}>Pick a username to get started</p>
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <input
@@ -35,17 +36,25 @@ export default function LoginPage({ onNavigateToRegister }) {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
+            autoComplete="new-password"
+          />
+          <input
+            className={styles.input}
+            type="password"
+            placeholder="Confirm password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
           />
           <button className={styles.button} type="submit">
-            Sign in
+            Create account
           </button>
         </form>
 
         <p className={styles.footer}>
-          New here?{' '}
-          <a href="#" className={styles.link} onClick={(e) => { e.preventDefault(); onNavigateToRegister() }}>
-            Create an account
+          Already have an account?{' '}
+          <a href="#" className={styles.link} onClick={(e) => { e.preventDefault(); onNavigateToLogin() }}>
+            Sign in
           </a>
         </p>
       </div>
