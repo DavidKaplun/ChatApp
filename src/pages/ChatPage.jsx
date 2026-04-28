@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import styles from './ChatPage.module.css'
 import CallPanel from './CallPanel'
 
@@ -19,18 +19,45 @@ const MESSAGES = [
 ]
 
 const CALL_VIEWS = ['outgoing-call', 'incoming-call', 'audio-call', 'video-call']
+const AVATAR_COLORS = ['#a89fd8', '#43B589', '#E06B5A', '#D95F8A', '#E09040', '#5b52e7', '#2196F3']
 
-export default function ChatPage() {
+function colorFromId(id)   { return AVATAR_COLORS[id % AVATAR_COLORS.length] }
+function initialsFromName(name) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+}
+
+export default function ChatPage({ user }) {
   const [activeId, setActiveId]       = useState(1)
   const [message, setMessage]         = useState('')
   const [view, setView]               = useState('chat')
-  const [displayName, setDisplayName] = useState('David')
-  const active = CONVERSATIONS.find(c => c.id === activeId)
+  const [displayName, setDisplayName] = useState(user?.display_name || 'David')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState(null)
 
-  function openChat(id) { setActiveId(id); setView('chat') }
+  const active     = CONVERSATIONS.find(c => c.id === activeId)
+  const isCallView = CALL_VIEWS.includes(view)
+  const isSearching = searchQuery.trim().length > 0
+
+  useEffect(() => {
+    if (!isSearching) { setSearchResults(null); return }
+    const t = setTimeout(() => doSearch(searchQuery.trim()), 300)
+    return () => clearTimeout(t)
+  }, [searchQuery])
+
+  async function doSearch(q) {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/search?q=${encodeURIComponent(q)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) setSearchResults(await res.json())
+    } catch {}
+  }
+
+  function openChat(id) { setActiveId(id); setView('chat'); setSearchQuery('') }
   function endCall()    { setView('chat') }
 
-  const isCallView = CALL_VIEWS.includes(view)
+  const noSearchResults = searchResults && searchResults.conversations.length === 0 && searchResults.others.length === 0
 
   return (
     <div className={styles.wrapper}>
@@ -42,30 +69,85 @@ export default function ChatPage() {
             <h2 className={styles.sidebarTitle}>Messages</h2>
           </div>
           <div className={styles.searchWrap}>
-            <input className={styles.searchInput} type="text" placeholder="Search" />
+            <input
+              className={styles.searchInput}
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
           </div>
 
-          <ul className={styles.convList}>
-            {CONVERSATIONS.map(conv => (
-              <li
-                key={conv.id}
-                className={`${styles.convItem} ${conv.id === activeId && view === 'chat' ? styles.convItemActive : ''}`}
-                onClick={() => openChat(conv.id)}
-              >
-                <div className={styles.avatar} style={{ backgroundColor: conv.color }}>{conv.initials}</div>
-                <div className={styles.convInfo}>
-                  <span className={styles.convName}>{conv.name}</span>
-                  <span className={styles.convPreview}>{conv.lastMsg}</span>
-                </div>
-                <span className={styles.convTime}>{conv.time}</span>
-              </li>
-            ))}
-          </ul>
+          {/* ── Search results ── */}
+          {isSearching ? (
+            <div className={styles.searchResults}>
+              {noSearchResults && (
+                <p className={styles.noResults}>No users found</p>
+              )}
+              {searchResults?.conversations.length > 0 && (
+                <>
+                  <span className={styles.searchSection}>YOUR CONVERSATIONS</span>
+                  {searchResults.conversations.map(u => (
+                    <div
+                      key={u.id}
+                      className={styles.convItem}
+                      onClick={() => openChat(u.id)}
+                    >
+                      <div className={styles.avatar} style={{ backgroundColor: colorFromId(u.id) }}>
+                        {initialsFromName(u.display_name)}
+                      </div>
+                      <div className={styles.convInfo}>
+                        <span className={styles.convName}>{u.display_name}</span>
+                        <span className={styles.convPreview}>@{u.username}</span>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+              {searchResults?.others.length > 0 && (
+                <>
+                  <span className={styles.searchSection}>OTHER PEOPLE</span>
+                  {searchResults.others.map(u => (
+                    <div
+                      key={u.id}
+                      className={styles.convItem}
+                      onClick={() => setView('search-empty')}
+                    >
+                      <div className={styles.avatar} style={{ backgroundColor: colorFromId(u.id) }}>
+                        {initialsFromName(u.display_name)}
+                      </div>
+                      <div className={styles.convInfo}>
+                        <span className={styles.convName}>{u.display_name}</span>
+                        <span className={styles.convPreview}>@{u.username}</span>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          ) : (
+            <ul className={styles.convList}>
+              {CONVERSATIONS.map(conv => (
+                <li
+                  key={conv.id}
+                  className={`${styles.convItem} ${conv.id === activeId && view === 'chat' ? styles.convItemActive : ''}`}
+                  onClick={() => openChat(conv.id)}
+                >
+                  <div className={styles.avatar} style={{ backgroundColor: conv.color }}>{conv.initials}</div>
+                  <div className={styles.convInfo}>
+                    <span className={styles.convName}>{conv.name}</span>
+                    <span className={styles.convPreview}>{conv.lastMsg}</span>
+                  </div>
+                  <span className={styles.convTime}>{conv.time}</span>
+                </li>
+              ))}
+            </ul>
+          )}
 
           <div className={`${styles.userProfile} ${view === 'settings' ? styles.userProfileActive : ''}`}>
             <div className={styles.avatar} style={{ backgroundColor: '#5b52e7' }}>DV</div>
             <div className={styles.userInfo}>
-              <span className={styles.userName}>David</span>
+              <span className={styles.userName}>{displayName}</span>
               <span className={styles.userSub}>Settings</span>
             </div>
             <button className={styles.settingsBtn} aria-label="Settings" onClick={() => setView('settings')}>
@@ -84,15 +166,26 @@ export default function ChatPage() {
           />
         )}
 
+        {/* ── Search empty state ── */}
+        {(view === 'search-empty' || (isSearching && view !== 'settings' && !isCallView)) && (
+          <div className={styles.chatArea}>
+            <div className={styles.searchEmptyState}>
+              <div className={styles.searchEmptyIcon}><SearchBigIcon /></div>
+              <span className={styles.searchEmptyTitle}>Search to start chatting</span>
+              <span className={styles.searchEmptySub}>Find anyone by name or username and send them a message.</span>
+            </div>
+          </div>
+        )}
+
         {/* ── Settings ── */}
-        {view === 'settings' && (
+        {view === 'settings' && !isSearching && (
           <div className={styles.chatArea}>
             <header className={styles.chatHeader}>
               <span className={styles.chatHeaderName}>Settings</span>
             </header>
             <div className={styles.settingsBody}>
               <div className={styles.settingsAvatar} style={{ backgroundColor: '#5b52e7' }}>DV</div>
-              <span className={styles.settingsUsername}>@davidv</span>
+              <span className={styles.settingsUsername}>@{user?.username || 'davidv'}</span>
               <div className={styles.settingsField}>
                 <label className={styles.settingsLabel}>Display name</label>
                 <input className={styles.settingsInput} type="text" value={displayName} onChange={e => setDisplayName(e.target.value)} />
@@ -106,7 +199,7 @@ export default function ChatPage() {
         )}
 
         {/* ── Chat ── */}
-        {view === 'chat' && (
+        {view === 'chat' && !isSearching && (
           <div className={styles.chatArea}>
             <header className={styles.chatHeader}>
               <div className={styles.avatar} style={{ backgroundColor: active.color }}>{active.initials}</div>
@@ -164,6 +257,14 @@ function SendIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <line x1="12" y1="19" x2="12" y2="5"/>
       <polyline points="5 12 12 5 19 12"/>
+    </svg>
+  )
+}
+function SearchBigIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#aaaaaa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
     </svg>
   )
 }
