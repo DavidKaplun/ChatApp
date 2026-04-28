@@ -2,11 +2,11 @@ import { useState } from 'react'
 import styles from './ChatPage.module.css'
 
 const CONVERSATIONS = [
-  { id: 1, initials: 'MR', name: 'Maya Rodriguez', lastMsg: 'sounds good, talk later',       time: '2:14', color: '#7B6CF6' },
-  { id: 2, initials: 'JT', name: 'Jordan Tate',    lastMsg: 'did you see the new build?',    time: '1:02', color: '#43B589' },
+  { id: 1, initials: 'MR', name: 'Maya Rodriguez', lastMsg: 'sounds good, talk later',        time: '2:14', color: '#7B6CF6' },
+  { id: 2, initials: 'JT', name: 'Jordan Tate',    lastMsg: 'did you see the new build?',     time: '1:02', color: '#43B589' },
   { id: 3, initials: 'SK', name: 'Sam Klein',       lastMsg: 'thanks for the help yesterd...', time: 'Mon',  color: '#E06B5A' },
-  { id: 4, initials: 'AL', name: 'Alex Lin',        lastMsg: "let me know when you're free", time: 'Sun',  color: '#D95F8A' },
-  { id: 5, initials: 'DK', name: 'Dana Kim',        lastMsg: 'happy birthday!!',              time: 'Sat',  color: '#E09040' },
+  { id: 4, initials: 'AL', name: 'Alex Lin',        lastMsg: "let me know when you're free",  time: 'Sun',  color: '#D95F8A' },
+  { id: 5, initials: 'DK', name: 'Dana Kim',        lastMsg: 'happy birthday!!',               time: 'Sat',  color: '#E09040' },
 ]
 
 const MESSAGES = [
@@ -18,9 +18,16 @@ const MESSAGES = [
 ]
 
 export default function ChatPage() {
-  const [activeId, setActiveId] = useState(1)
-  const [message, setMessage] = useState('')
+  const [activeId, setActiveId]   = useState(1)
+  const [message, setMessage]     = useState('')
+  const [view, setView]           = useState('chat') // 'chat' | 'settings'
+  const [displayName, setDisplayName] = useState('David')
   const active = CONVERSATIONS.find(c => c.id === activeId)
+
+  function openChat(id) {
+    setActiveId(id)
+    setView('chat')
+  }
 
   return (
     <div className={styles.wrapper}>
@@ -39,12 +46,10 @@ export default function ChatPage() {
             {CONVERSATIONS.map(conv => (
               <li
                 key={conv.id}
-                className={`${styles.convItem} ${conv.id === activeId ? styles.convItemActive : ''}`}
-                onClick={() => setActiveId(conv.id)}
+                className={`${styles.convItem} ${conv.id === activeId && view === 'chat' ? styles.convItemActive : ''}`}
+                onClick={() => openChat(conv.id)}
               >
-                <div className={styles.avatar} style={{ backgroundColor: conv.color }}>
-                  {conv.initials}
-                </div>
+                <div className={styles.avatar} style={{ backgroundColor: conv.color }}>{conv.initials}</div>
                 <div className={styles.convInfo}>
                   <span className={styles.convName}>{conv.name}</span>
                   <span className={styles.convPreview}>{conv.lastMsg}</span>
@@ -54,54 +59,82 @@ export default function ChatPage() {
             ))}
           </ul>
 
-          <div className={styles.userProfile}>
+          <div className={`${styles.userProfile} ${view === 'settings' ? styles.userProfileActive : ''}`}>
             <div className={styles.avatar} style={{ backgroundColor: '#5b52e7' }}>DV</div>
             <div className={styles.userInfo}>
               <span className={styles.userName}>David</span>
               <span className={styles.userSub}>Settings</span>
             </div>
-            <button className={styles.settingsBtn} aria-label="Settings">
+            <button className={styles.settingsBtn} aria-label="Settings" onClick={() => setView('settings')}>
               <GearIcon />
             </button>
           </div>
         </aside>
 
-        {/* ── Chat area ── */}
-        <div className={styles.chatArea}>
-          <header className={styles.chatHeader}>
-            <div className={styles.avatar} style={{ backgroundColor: active.color }}>{active.initials}</div>
-            <span className={styles.chatHeaderName}>{active.name}</span>
-            <div className={styles.chatHeaderIcons}>
-              <button className={styles.iconBtn} aria-label="Voice call"><PhoneIcon /></button>
-              <button className={styles.iconBtn} aria-label="Video call"><VideoIcon /></button>
-            </div>
-          </header>
+        {/* ── Main area ── */}
+        {view === 'settings' ? (
+          <div className={styles.chatArea}>
+            <header className={styles.chatHeader}>
+              <span className={styles.chatHeaderName}>Settings</span>
+            </header>
 
-          <div className={styles.messages}>
-            <span className={styles.dateSep}>Today 1:58 PM</span>
-            {MESSAGES.map(msg => (
-              <div
-                key={msg.id}
-                className={`${styles.bubble} ${msg.sent ? styles.bubbleSent : styles.bubbleReceived}`}
-              >
-                {msg.text}
+            <div className={styles.settingsBody}>
+              <div className={styles.settingsAvatar} style={{ backgroundColor: '#5b52e7' }}>DV</div>
+              <span className={styles.settingsUsername}>@davidv</span>
+
+              <div className={styles.settingsField}>
+                <label className={styles.settingsLabel}>Display name</label>
+                <input
+                  className={styles.settingsInput}
+                  type="text"
+                  value={displayName}
+                  onChange={e => setDisplayName(e.target.value)}
+                />
+                <span className={styles.settingsHint}>This is how others will see you in chats.</span>
               </div>
-            ))}
-          </div>
 
-          <div className={styles.inputArea}>
-            <input
-              className={styles.msgInput}
-              type="text"
-              placeholder="Message"
-              value={message}
-              onChange={e => setMessage(e.target.value)}
-            />
-            <button className={styles.sendBtn} aria-label="Send">
-              <SendIcon />
-            </button>
+              <button className={styles.saveBtn}>Save changes</button>
+
+              <div className={styles.settingsDivider} />
+
+              <button className={styles.signOutBtn}>Sign out</button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className={styles.chatArea}>
+            <header className={styles.chatHeader}>
+              <div className={styles.avatar} style={{ backgroundColor: active.color }}>{active.initials}</div>
+              <span className={styles.chatHeaderName}>{active.name}</span>
+              <div className={styles.chatHeaderIcons}>
+                <button className={styles.iconBtn} aria-label="Voice call"><PhoneIcon /></button>
+                <button className={styles.iconBtn} aria-label="Video call"><VideoIcon /></button>
+              </div>
+            </header>
+
+            <div className={styles.messages}>
+              <span className={styles.dateSep}>Today 1:58 PM</span>
+              {MESSAGES.map(msg => (
+                <div
+                  key={msg.id}
+                  className={`${styles.bubble} ${msg.sent ? styles.bubbleSent : styles.bubbleReceived}`}
+                >
+                  {msg.text}
+                </div>
+              ))}
+            </div>
+
+            <div className={styles.inputArea}>
+              <input
+                className={styles.msgInput}
+                type="text"
+                placeholder="Message"
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+              />
+              <button className={styles.sendBtn} aria-label="Send"><SendIcon /></button>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

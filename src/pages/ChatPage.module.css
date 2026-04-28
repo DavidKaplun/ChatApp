@@ -308,3 +308,119 @@
 .sendBtn:hover {
   background: #4a42d0;
 }
+
+/* ── Settings panel ── */
+.userProfileActive {
+  background: #f2f2f2;
+}
+
+.settingsBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 60px;
+  overflow-y: auto;
+  background: #fafafa;
+}
+
+.settingsAvatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.settingsUsername {
+  font-size: 14px;
+  color: #999999;
+  margin-bottom: 36px;
+}
+
+.settingsField {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.settingsLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111111;
+}
+
+.settingsInput {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid #e2e2e2;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #111111;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.settingsInput:focus {
+  border-color: #5b52e7;
+}
+
+.settingsHint {
+  font-size: 12.5px;
+  color: #aaaaaa;
+}
+
+.saveBtn {
+  width: 100%;
+  max-width: 480px;
+  padding: 15px;
+  background: #5b52e7;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background 0.15s;
+}
+
+.saveBtn:hover {
+  background: #4a42d0;
+}
+
+.settingsDivider {
+  width: 100%;
+  max-width: 480px;
+  height: 1px;
+  background: #eeeeee;
+  margin-bottom: 20px;
+}
+
+.signOutBtn {
+  width: 100%;
+  max-width: 480px;
+  padding: 14px;
+  background: #ffffff;
+  color: #e05252;
+  border: 1.5px solid #e2e2e2;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.signOutBtn:hover {
+  background: #fff5f5;
+  border-color: #e05252;
+}
