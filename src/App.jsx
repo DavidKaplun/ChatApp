@@ -12,8 +12,15 @@ export default function App() {
     setPage('chat')
   }
 
+  function signOut() {
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('user')
+    setUser(null)
+    setPage('login')
+  }
+
   if (page === 'register') return <RegisterPage onNavigateToLogin={() => setPage('login')} onNavigateToChat={goToChat} />
-  if (page === 'chat')     return <ChatPage user={user} />
+  if (page === 'chat')     return <ChatPage key={user.id} user={user} onSignOut={signOut} />
 
   return <LoginPage onNavigateToRegister={() => setPage('register')} onNavigateToChat={goToChat} />
 }

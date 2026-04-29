@@ -19,8 +19,8 @@ export default function LoginPage({ onNavigateToRegister, onNavigateToChat }) {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error); return }
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user',  JSON.stringify(data.user))
+      sessionStorage.setItem('token', data.token)
+      sessionStorage.setItem('user',  JSON.stringify(data.user))
       onNavigateToChat(data.user)
     } catch {
       setError('Could not connect to server')

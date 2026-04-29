@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import styles from './ChatPage.module.css'
 import CallPanel from './CallPanel'
 
@@ -19,7 +19,7 @@ function fmtTime(iso) {
 
 const CALL_VIEWS = ['outgoing-call', 'incoming-call', 'audio-call', 'video-call']
 
-export default function ChatPage({ user }) {
+export default function ChatPage({ user, onSignOut }) {
   const [conversations, setConversations] = useState([])
   const [activeConv, setActiveConv]       = useState(null)
   const [messages, setMessages]           = useState([])
@@ -28,6 +28,7 @@ export default function ChatPage({ user }) {
   const [displayName, setDisplayName]     = useState(user?.display_name || '')
   const [searchQuery, setSearchQuery]     = useState('')
   const [searchResults, setSearchResults] = useState(null)
+  const activeConvIdRef = useRef(null)
 
   const isCallView  = CALL_VIEWS.includes(view)
   const isSearching = searchQuery.trim().length > 0
@@ -41,7 +42,7 @@ export default function ChatPage({ user }) {
   }, [searchQuery])
 
   async function authFetch(path, opts = {}) {
-    const token = localStorage.getItem('token')
+    const token = sessionStorage.getItem('token')
     return fetch(`${import.meta.env.VITE_API_URL}${path}`, {
       ...opts,
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...opts.headers },
@@ -56,12 +57,16 @@ export default function ChatPage({ user }) {
   }
 
   async function openConversation(conv) {
+    activeConvIdRef.current = conv.id
     setActiveConv(conv)
+    setMessages([])
     setView('chat')
     setSearchQuery('')
     try {
       const res = await authFetch(`/api/conversations/${conv.id}/messages`)
-      if (res.ok) setMessages(await res.json())
+      if (res.ok && activeConvIdRef.current === conv.id) {
+        setMessages(await res.json())
+      }
     } catch {}
   }
 
@@ -257,7 +262,7 @@ export default function ChatPage({ user }) {
               </div>
               <button className={styles.saveBtn}>Save changes</button>
               <div className={styles.settingsDivider} />
-              <button className={styles.signOutBtn}>Sign out</button>
+              <button className={styles.signOutBtn} onClick={onSignOut}>Sign out</button>
             </div>
           </div>
         )}
