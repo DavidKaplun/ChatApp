@@ -36,6 +36,17 @@ export default function ChatPage({ user, onSignOut }) {
   useEffect(() => { fetchConversations() }, [])
 
   useEffect(() => {
+    const id = setInterval(fetchConversations, 5000)
+    return () => clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    if (!activeConvIdRef.current) return
+    const id = setInterval(() => pollMessages(activeConvIdRef.current), 5000)
+    return () => clearInterval(id)
+  }, [activeConv])
+
+  useEffect(() => {
     if (!isSearching) { setSearchResults(null); return }
     const t = setTimeout(() => doSearch(searchQuery.trim()), 300)
     return () => clearTimeout(t)
@@ -53,6 +64,13 @@ export default function ChatPage({ user, onSignOut }) {
     try {
       const res = await authFetch('/api/conversations')
       if (res.ok) setConversations(await res.json())
+    } catch {}
+  }
+
+  async function pollMessages(convId) {
+    try {
+      const res = await authFetch(`/api/conversations/${convId}/messages`)
+      if (res.ok && activeConvIdRef.current === convId) setMessages(await res.json())
     } catch {}
   }
 
