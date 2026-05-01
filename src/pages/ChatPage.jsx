@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
+import { io } from 'socket.io-client'
 import styles from './ChatPage.module.css'
 import CallPanel from './CallPanel'
 
 const AVATAR_COLORS = ['#a89fd8', '#43B589', '#E06B5A', '#D95F8A', '#E09040', '#5b52e7', '#2196F3']
+const ICE_SERVERS   = [{ urls: 'stun:stun.l.google.com:19302' }]
 
-function colorFromId(id)       { return AVATAR_COLORS[id % AVATAR_COLORS.length] }
+function colorFromId(id)        { return AVATAR_COLORS[id % AVATAR_COLORS.length] }
 function initialsFromName(name) { return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) }
 
 function fmtTime(iso) {
@@ -28,10 +30,57 @@ export default function ChatPage({ user, onSignOut }) {
   const [displayName, setDisplayName]     = useState(user?.display_name || '')
   const [searchQuery, setSearchQuery]     = useState('')
   const [searchResults, setSearchResults] = useState(null)
+  const [callContact, setCallContact]     = useState(null)
+  const [micMuted, setMicMuted]           = useState(false)
+
   const activeConvIdRef = useRef(null)
+  const socketRef       = useRef(null)
+  const pcRef           = useRef(null)
+  const localStreamRef  = useRef(null)
+  const remoteAudioRef  = useRef(null)
+  const peerSocketIdRef = useRef(null)
+  const incomingCallRef = useRef(null)
+  const prevViewRef     = useRef('none')
 
   const isCallView  = CALL_VIEWS.includes(view)
   const isSearching = searchQuery.trim().length > 0
+
+  // ── Socket.IO + signaling ──
+  useEffect(() => {
+    const socket = io(import.meta.env.VITE_API_URL, { transports: ['websocket'] })
+    socketRef.current = socket
+
+    socket.on('connect', () => socket.emit('register', user.id))
+
+    socket.on('incoming-call', ({ offer, callerId, callerName, callerSocketId }) => {
+      incomingCallRef.current = { offer, callerSocketId }
+      prevViewRef.current = view
+      setCallContact({ name: callerName, initials: initialsFromName(callerName), color: colorFromId(callerId) })
+      setView('incoming-call')
+    })
+
+    socket.on('call-accepted', async ({ answer, calleeSocketId }) => {
+      peerSocketIdRef.current = calleeSocketId
+      try { await pcRef.current.setRemoteDescription(answer) } catch {}
+      setView('audio-call')
+    })
+
+    socket.on('call-rejected', () => {
+      cleanupCall()
+      setView(prevViewRef.current)
+    })
+
+    socket.on('ice-candidate', async ({ candidate }) => {
+      try { await pcRef.current?.addIceCandidate(candidate) } catch {}
+    })
+
+    socket.on('call-ended', () => {
+      cleanupCall()
+      setView(prevViewRef.current)
+    })
+
+    return () => socket.disconnect()
+  }, [])
 
   useEffect(() => { fetchConversations() }, [])
 
@@ -52,6 +101,92 @@ export default function ChatPage({ user, onSignOut }) {
     return () => clearTimeout(t)
   }, [searchQuery])
 
+  // ── WebRTC helpers ──
+  function cleanupCall() {
+    pcRef.current?.close()
+    pcRef.current = null
+    localStreamRef.current?.getTracks().forEach(t => t.stop())
+    localStreamRef.current = null
+    peerSocketIdRef.current = null
+    incomingCallRef.current = null
+    if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null
+    setCallContact(null)
+    setMicMuted(false)
+  }
+
+  function makePeerConnection() {
+    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS })
+    pc.onicecandidate = e => {
+      if (e.candidate && peerSocketIdRef.current) {
+        socketRef.current.emit('ice-candidate', { targetSocketId: peerSocketIdRef.current, candidate: e.candidate })
+      }
+    }
+    pc.ontrack = e => {
+      if (remoteAudioRef.current) remoteAudioRef.current.srcObject = e.streams[0]
+    }
+    return pc
+  }
+
+  async function startCall() {
+    if (!activeConv) return
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      localStreamRef.current = stream
+      const pc = makePeerConnection()
+      pcRef.current = pc
+      stream.getTracks().forEach(t => pc.addTrack(t, stream))
+      const offer = await pc.createOffer()
+      await pc.setLocalDescription(offer)
+      prevViewRef.current = view
+      setCallContact({ name: activeConv.display_name, initials: initialsFromName(activeConv.display_name), color: colorFromId(activeConv.other_user_id) })
+      socketRef.current.emit('call-user', { targetUserId: activeConv.other_user_id, offer, callerId: user.id, callerName: user.display_name })
+      setView('outgoing-call')
+    } catch (err) {
+      console.error('Failed to start call:', err)
+    }
+  }
+
+  async function acceptCall() {
+    const { offer, callerSocketId } = incomingCallRef.current
+    peerSocketIdRef.current = callerSocketId
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      localStreamRef.current = stream
+      const pc = makePeerConnection()
+      pcRef.current = pc
+      stream.getTracks().forEach(t => pc.addTrack(t, stream))
+      await pc.setRemoteDescription(offer)
+      const answer = await pc.createAnswer()
+      await pc.setLocalDescription(answer)
+      socketRef.current.emit('accept-call', { callerSocketId, answer })
+      setView('audio-call')
+    } catch (err) {
+      console.error('Failed to accept call:', err)
+    }
+  }
+
+  function rejectCall() {
+    socketRef.current.emit('reject-call', { callerSocketId: incomingCallRef.current?.callerSocketId })
+    cleanupCall()
+    setView(prevViewRef.current)
+  }
+
+  function endCall() {
+    if (peerSocketIdRef.current) {
+      socketRef.current.emit('end-call', { targetSocketId: peerSocketIdRef.current })
+    }
+    cleanupCall()
+    setView(prevViewRef.current)
+  }
+
+  function toggleMute() {
+    if (!localStreamRef.current) return
+    const next = !micMuted
+    localStreamRef.current.getAudioTracks().forEach(t => { t.enabled = !next })
+    setMicMuted(next)
+  }
+
+  // ── API ──
   async function authFetch(path, opts = {}) {
     const token = sessionStorage.getItem('token')
     return fetch(`${import.meta.env.VITE_API_URL}${path}`, {
@@ -82,9 +217,7 @@ export default function ChatPage({ user, onSignOut }) {
     setSearchQuery('')
     try {
       const res = await authFetch(`/api/conversations/${conv.id}/messages`)
-      if (res.ok && activeConvIdRef.current === conv.id) {
-        setMessages(await res.json())
-      }
+      if (res.ok && activeConvIdRef.current === conv.id) setMessages(await res.json())
     } catch {}
   }
 
@@ -125,14 +258,6 @@ export default function ChatPage({ user, onSignOut }) {
     } catch {}
   }
 
-  function endCall() { setView('chat') }
-
-  const callContact = activeConv ? {
-    name:     activeConv.display_name,
-    initials: initialsFromName(activeConv.display_name),
-    color:    colorFromId(activeConv.other_user_id),
-  } : null
-
   const noSearchResults = searchResults &&
     searchResults.conversations.length === 0 &&
     searchResults.others.length === 0
@@ -145,6 +270,7 @@ export default function ChatPage({ user, onSignOut }) {
 
   return (
     <div className={styles.wrapper}>
+      <audio ref={remoteAudioRef} autoPlay />
       <div className={styles.container}>
 
         {/* ── Sidebar ── */}
@@ -246,8 +372,10 @@ export default function ChatPage({ user, onSignOut }) {
           <CallPanel
             view={view}
             contact={callContact}
-            onEnd={endCall}
-            onAccept={() => setView('audio-call')}
+            onEnd={view === 'incoming-call' ? rejectCall : endCall}
+            onAccept={acceptCall}
+            micMuted={micMuted}
+            onMuteToggle={toggleMute}
           />
         )}
 
@@ -294,7 +422,7 @@ export default function ChatPage({ user, onSignOut }) {
               </div>
               <span className={styles.chatHeaderName}>{activeConv.display_name}</span>
               <div className={styles.chatHeaderIcons}>
-                <button className={styles.iconBtn} onClick={() => setView('outgoing-call')}><PhoneIcon /></button>
+                <button className={styles.iconBtn} onClick={startCall}><PhoneIcon /></button>
                 <button className={styles.iconBtn} onClick={() => setView('video-call')}><VideoIcon /></button>
               </div>
             </header>

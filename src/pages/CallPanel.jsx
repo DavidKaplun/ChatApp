@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import styles from './CallPanel.module.css'
 
-export default function CallPanel({ view, contact, onEnd, onAccept }) {
+export default function CallPanel({ view, contact, onEnd, onAccept, micMuted, onMuteToggle }) {
   const [seconds, setSeconds] = useState(0)
-  const [micMuted, setMicMuted] = useState(false)
-  const [camOff, setCamOff]     = useState(false)
+  const [camOff, setCamOff]   = useState(false)
 
   useEffect(() => {
     if (view !== 'audio-call' && view !== 'video-call') { setSeconds(0); return }
@@ -32,7 +31,7 @@ export default function CallPanel({ view, contact, onEnd, onAccept }) {
           {contact.initials}
         </div>
         <div className={styles.controls}>
-          <button className={`${styles.ctrlBtn} ${micMuted ? styles.ctrlBtnOn : ''}`} onClick={() => setMicMuted(m => !m)}>
+          <button className={`${styles.ctrlBtn} ${micMuted ? styles.ctrlBtnOn : ''}`} onClick={onMuteToggle}>
             <MicIcon />
           </button>
           <button className={`${styles.ctrlBtn} ${camOff ? styles.ctrlBtnOn : ''}`} onClick={() => setCamOff(c => !c)}>
@@ -106,7 +105,7 @@ export default function CallPanel({ view, contact, onEnd, onAccept }) {
         <span className={styles.callerName}>{contact.name}</span>
         <span className={styles.timerText}>{fmt(seconds)}</span>
         <div className={styles.controls}>
-          <button className={`${styles.ctrlBtn} ${micMuted ? styles.ctrlBtnOn : ''}`} onClick={() => setMicMuted(m => !m)}>
+          <button className={`${styles.ctrlBtn} ${micMuted ? styles.ctrlBtnOn : ''}`} onClick={onMuteToggle}>
             <MicIcon />
           </button>
           <button className={styles.ctrlBtn}><SpeakerIcon /></button>
