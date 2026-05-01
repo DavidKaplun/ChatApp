@@ -8,7 +8,7 @@ import conversationsRoutes from './routes/conversations.js'
 dotenv.config()
 
 const app = express()
-app.use(cors({ origin: 'http://localhost:5173' }))
+app.use(cors({ origin: true }))
 app.use(express.json())
 app.use('/api/auth', authRoutes)
 app.use('/api/users', usersRoutes)
