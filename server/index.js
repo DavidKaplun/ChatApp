@@ -26,10 +26,10 @@ io.on('connection', socket => {
     userSockets.set(Number(userId), socket.id)
   })
 
-  socket.on('call-user', ({ targetUserId, offer, callerId, callerName }) => {
+  socket.on('call-user', ({ targetUserId, offer, callerId, callerName, callType }) => {
     const targetSocketId = userSockets.get(Number(targetUserId))
     if (targetSocketId) {
-      io.to(targetSocketId).emit('incoming-call', { offer, callerId, callerName, callerSocketId: socket.id })
+      io.to(targetSocketId).emit('incoming-call', { offer, callerId, callerName, callerSocketId: socket.id, callType })
     }
   })
 

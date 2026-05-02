@@ -1,9 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styles from './CallPanel.module.css'
 
-export default function CallPanel({ view, contact, onEnd, onAccept, micMuted, onMuteToggle }) {
+export default function CallPanel({ view, contact, onEnd, onAccept, micMuted, onMuteToggle, localStream, remoteStream, callType }) {
   const [seconds, setSeconds] = useState(0)
   const [camOff, setCamOff]   = useState(false)
+  const localVideoRef  = useRef(null)
+  const remoteVideoRef = useRef(null)
+
+  useEffect(() => {
+    if (localVideoRef.current && localStream) localVideoRef.current.srcObject = localStream
+  }, [localStream, view])
+
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) remoteVideoRef.current.srcObject = remoteStream
+  }, [remoteStream, view])
 
   useEffect(() => {
     if (view !== 'audio-call' && view !== 'video-call') { setSeconds(0); return }
@@ -19,16 +29,11 @@ export default function CallPanel({ view, contact, onEnd, onAccept, micMuted, on
   if (view === 'video-call') {
     return (
       <div className={styles.panel}>
+        <video ref={remoteVideoRef} autoPlay playsInline className={styles.remoteVideo} />
+        <video ref={localVideoRef}  autoPlay playsInline muted className={styles.localVideo} />
         <div className={styles.videoTopLeft}>
           <span className={styles.videoName}>{contact.name}</span>
           <span className={styles.videoTimer}>{fmt(seconds)}</span>
-        </div>
-        <span className={styles.hdBadge}>HD</span>
-        <div className={styles.selfView}>
-          <div className={styles.selfAvatar} style={{ backgroundColor: '#43B589' }}>DV</div>
-        </div>
-        <div className={styles.videoAvatar} style={{ backgroundColor: contact.color }}>
-          {contact.initials}
         </div>
         <div className={styles.controls}>
           <button className={`${styles.ctrlBtn} ${micMuted ? styles.ctrlBtnOn : ''}`} onClick={onMuteToggle}>
@@ -36,9 +41,6 @@ export default function CallPanel({ view, contact, onEnd, onAccept, micMuted, on
           </button>
           <button className={`${styles.ctrlBtn} ${camOff ? styles.ctrlBtnOn : ''}`} onClick={() => setCamOff(c => !c)}>
             <CamIcon />
-          </button>
-          <button className={styles.ctrlBtn}>
-            <SwitchIcon />
           </button>
           <button className={styles.endBtn} onClick={onEnd}>
             <EndIcon />
@@ -52,7 +54,7 @@ export default function CallPanel({ view, contact, onEnd, onAccept, micMuted, on
   if (view === 'incoming-call') {
     return (
       <div className={styles.panel}>
-        <span className={styles.callLabel}>Incoming voice call</span>
+        <span className={styles.callLabel}>Incoming {callType === 'video' ? 'video' : 'voice'} call</span>
         <div className={styles.ringOuter}>
           <div className={styles.ringInner}>
             <div className={styles.centerAvatar} style={{ backgroundColor: contact.color }}>
