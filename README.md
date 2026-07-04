@@ -51,4 +51,3 @@ npm install
 npm run dev
 ```
 
-> Fill in the bracketed placeholders (demo link, live URL, exact env vars, DB setup, run scripts) with your actual values.
