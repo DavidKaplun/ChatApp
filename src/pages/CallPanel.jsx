@@ -28,7 +28,7 @@ export default function CallPanel({ view, contact, onEnd, onAccept, micMuted, on
   /* ── VIDEO CALL ── */
   if (view === 'video-call') {
     return (
-      <div className={styles.panel}>
+      <div className={`${styles.panel} ${styles.videoPanel}`}>
         <video ref={remoteVideoRef} autoPlay playsInline className={styles.remoteVideo} />
         <video ref={localVideoRef}  autoPlay playsInline muted className={styles.localVideo} />
         <div className={styles.videoTopLeft}>

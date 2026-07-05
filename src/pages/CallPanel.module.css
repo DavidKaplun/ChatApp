@@ -250,3 +250,8 @@
   color: #cccccc;
   font-size: 13px;
 }
+
+.videoPanel {
+  justify-content: flex-end;
+  padding-bottom: 32px;
+}
