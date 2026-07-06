@@ -31,7 +31,7 @@ Peer-to-peer calls established over WebRTC, with a self-hosted coturn TURN serve
 <img width="1920" height="917" alt="getting called" src="https://github.com/user-attachments/assets/2fc9dfb1-1d25-4c4b-8ae7-b53639f76659" />
 
 
-*Live deployment at kaplunchatapp.com — incoming call received on a different machine.*
+*Live deployment at kaplunchatapp.com*
 
 🔗 **Live:** https://www.kaplunchatapp.com/
 
