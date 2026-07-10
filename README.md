@@ -4,34 +4,7 @@ A real-time messaging app with one-to-one audio and video calling, built with Re
 
 ## Demo
 
-### Authentication
-<img width="1919" height="944" alt="login page" src="https://github.com/user-attachments/assets/41cff967-5e88-47d1-b076-d7f470432b8b" />
-JWT-based auth — bcrypt-hashed passwords, parameterized queries.
-
-
-
-### Messaging
-<img width="1918" height="945" alt="messages page" src="https://github.com/user-attachments/assets/98d65972-1004-481d-a465-5b6476f99ac0" />
-
-Real-time text delivery via REST polling.
-
-
-
-### Voice & Video Calls (WebRTC)
-Peer-to-peer calls established over WebRTC, with a self-hosted coturn TURN server for NAT traversal.
-<img width="1533" height="725" alt="during call" src="https://github.com/user-attachments/assets/cab54767-ce23-4430-99bd-cd1a95a9e706" />
-<img width="1919" height="949" alt="during call computer 2" src="https://github.com/user-attachments/assets/c21e1c0f-2140-4723-ab26-e0467c1c8bf5" />
-
-
-
-*Caller side — WebRTC signaling in progress, waiting for the peer to answer.*
-<img width="1917" height="946" alt="calling page" src="https://github.com/user-attachments/assets/c1f4a7e2-29b4-4483-a0d5-75bfa9a8e0a7" />
-
-*Callee side on a separate machine — incoming call with accept/decline.*
-<img width="1920" height="917" alt="getting called" src="https://github.com/user-attachments/assets/2fc9dfb1-1d25-4c4b-8ae7-b53639f76659" />
-
-
-*Live deployment at kaplunchatapp.com*
+https://github.com/user-attachments/assets/469b7417-3cc0-4ba3-be20-8feb61379c89
 
 🔗 **Live:** https://www.kaplunchatapp.com/
 
